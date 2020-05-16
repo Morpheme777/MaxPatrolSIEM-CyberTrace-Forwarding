@@ -36,6 +36,10 @@ class OutputSocket():
                 self.log.info("Socket initialized")
                 self.socket_status = True
             except Exception as e:
+                try:
+                    self.send_socket.close()
+                except:
+                    pass
                 self.log.error("Socket initializing is failed: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.timeout)
                 self.socket_status = False
@@ -49,6 +53,10 @@ class OutputSocket():
                     self.send_socket.send(msg)
                     self.msg_counter += 1
             except Exception as e:
+                try:
+                    self.send_socket.close()
+                except:
+                    pass
                 self.socket_status = False
                 self.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.timeout)

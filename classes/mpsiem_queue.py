@@ -66,8 +66,8 @@ class MPSiemQueue():
                                                                 self.port, 
                                                                 self.rmq_vhost, 
                                                                 credentials)
-                connection = pika.BlockingConnection(connection_parameters)
-                self.channel = connection.channel()
+                self.connection = pika.BlockingConnection(connection_parameters)
+                self.channel = self.connection.channel()
                 self.channel.basic_qos(prefetch_count=1)
                 self.channel.queue_declare(self.queue_name, durable=True)
                 self.log.info("RMQ channel initialized")
@@ -99,6 +99,8 @@ class MPSiemQueue():
                 self.channel.start_consuming()
             except Exception as e:
                 self.log.warning("RMQ channel has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
+                self.channel.close()
+                self.connection.close()
                 time.sleep(self.timeout)
                 self.initChannel()
     
