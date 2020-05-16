@@ -21,47 +21,13 @@ FS_PORT = 9999
 lookup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 q = queue.Queue()
 
-def callback(ch, method, properties, body):
-    #try:    
-    j = json.loads(body.decode())
-    for event in j:
-        src = event['src.ip'] if "src.ip" in event else ""
-        dst = event['dst.ip'] if "dst.ip" in event else ""
-        shost = event['src.host'] if "src.host" in event else ""
-        dhost = event['dst.host'] if "dst.host" in event else ""
-        dport = str(event['dst.port']) if "dst.port" in event else ""
-        objp = event['object.path'] if "object.path" in event else ""
-        objh = event['object.hash'] if "object.hash" in event else ""
-        df1 = event['datafield1'] if "datafield1" in event else ""
-        dvc = event['recv_ipv4'] if "recv_ipv4" in event else ""
-        dvch = event['event_src.host'] if "event_src.host" in event else "" 
-        product = event['event_src.title'] if "event_src.title" in event else ""
-        ev_tmp = "src=" + str(src) + " dst=" + str(dst) + " shost=" + str(shost) + " dhost=" + str(dhost) + " dport=" + str(dport) + " objp=" + str(objp) + " objh=" + str(objh) + " df1=" + str(df1) + " product=" + str(product) + " dvc=" + str(dvc) + " dvch=" + str(dvch) + '\n'
-        if product != "cybertrace":
-            q.put(bytes(ev_tmp, 'utf-8'))
-
 
 def sendEvents(q):    
     while True:
         while q.qsize() > 0:        
             ev = q.get()    
             lookup_socket.send(ev)
-            
 
-def rmqConnect(rmq_set):
-    while True:
-        credentials = pika.PlainCredentials(rmq_set['rmqUser'], rmq_set['rmqPassword'])
-        try:
-            connection = pika.BlockingConnection(    
-            pika.ConnectionParameters(rmq_set['rmqAddress'], rmq_set['rmqPort'], rmq_set['rmqVhost'], credentials))
-        
-            channel = connection.channel()
-            print("RMQ Connection established")
-            return channel
-        except:
-            print("RMQ Connection was not established")
-            time.sleep(30)
-            continue
     
 def FSConnect(host, port):
     
@@ -89,12 +55,22 @@ def startConsuming(channel):
 def consumer1():
     # Connect to FS
     lookup_socket = FSConnect(FS_HOST, FS_PORT)
-    # Connecting to RMQ
-    channel1 = rmqConnect(RMQSettings)
+
     
     thread_send = threading.Thread(target=sendEvents,args=(q,))
     thread_send.start()
-    thread_consumer = threading.Thread(target=startConsuming, args=(channel1,))
+    
+    
+    mpsiem_q = MPSiemQueue(host = '172.26.12.197', 
+                            username = 'mpx_siem', 
+                            password = 'P@ssw0rd', 
+                            queue_name = 'cybertraceq',
+                            port = 5672,
+                            rmq_vhost = '/',
+                            timeout = 30,
+                            ioc_fields = ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],
+                            filter = [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}])
+    thread_consumer = threading.Thread(target=mpsiem_q.consume, args=(channel1,))
     thread_consumer.start()
 
 def main():
