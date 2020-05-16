@@ -14,6 +14,7 @@ class Forwarder():
         self.settings = settings
         self.q = queue.Queue()
         self.inside_queue = 0
+        self.monitoring_timeout = 10
 
     def processQueue(self):
         self.output_socket.initSocket()
@@ -33,6 +34,21 @@ class Forwarder():
                 self.output_socket.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.output_socket.timeout)
                 self.output_socket.initSocket()
+    
+    def monitoring(self):
+        while True:
+            time.sleep(self.monitoring_timeout)
+            self.log.info('queue cache = {}, in: [{} msg, {} evts, {} eps], out[{} evts, {} eps]'.format(
+                str(self.output_socket.inside_queue),
+                str(self.mpsiem_queue.msg_counter),
+                str(self.mpsiem_queue.event_counter),
+                str(round(self.mpsiem_queue.event_counter/self.monitoring_timeout, 2)),
+                str(self.output_socket.msg_counter),
+                str(round(self.output_socket.msg_counter/self.monitoring_timeout, 2))
+            ))
+            self.mpsiem_queue.msg_counter = 0
+            self.mpsiem_queue.event_counter = 0
+            self.output_socket.msg_counter = 0
 
     def run(self):
         self.log.info("Forwarder running..")
@@ -62,15 +78,8 @@ class Forwarder():
         
         thread_consumer = threading.Thread(target=self.mpsiem_queue.consume)
         thread_consumer.start()
+    
+        thread_monitoring = threading.Thread(target=self.monitoring)
+        thread_monitoring.start()
         
-        while True:
-            time.sleep(10)
-            self.log.info('queue size = {}, processed messages in = {}, processed events in = {}, processed events out = {}'.format(
-                str(self.output_socket.inside_queue),
-                str(self.mpsiem_queue.msg_counter),
-                str(self.mpsiem_queue.event_counter),
-                str(self.output_socket.msg_counter)
-            ))
-            self.mpsiem_queue.msg_counter = 0
-            self.mpsiem_queue.event_counter = 0
-            self.output_socket.msg_counter = 0
+        
