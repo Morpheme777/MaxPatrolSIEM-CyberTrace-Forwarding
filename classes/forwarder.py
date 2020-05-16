@@ -38,7 +38,9 @@ class Forwarder():
     def monitoring(self):
         while True:
             time.sleep(self.monitoring_timeout)
-            self.log.info('queue cache = {}, in: [{} msg, {} evts, {} eps], out[{} evts, {} eps]'.format(
+            self.log.info('Consumer:{}, Sender:{}, queue cache = {}, in: [{} msg, {} evts, {} eps], out: [{} evts, {} eps]'.format(
+                str(self.mpsiem_queue.chanel_status),
+                str(self.output_socket.socket_status),
                 str(self.output_socket.inside_queue),
                 str(self.mpsiem_queue.msg_counter),
                 str(self.mpsiem_queue.event_counter),
