@@ -31,7 +31,7 @@ class OutputSocket():
                 self.log.info("Socket initializing..")
                 self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.send_socket.connect((self.host, self.port))
-                if start_flag:
+                if self.start_flag:
                     self.send_socket.send(bytes(self.start_flag, "utf-8"))
                 self.log.info("Socket initialized")
                 self.socket_status = True

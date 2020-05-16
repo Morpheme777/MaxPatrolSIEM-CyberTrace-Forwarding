@@ -97,8 +97,8 @@ class MPSiemQueue():
             try:
                 self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.messageProcessing, auto_ack=True)
                 self.channel.start_consuming()
-            except:
-                self.log.warning("RMQ channel has lost connection. Reconnection in 30 sec..")
+            except Exception as e:
+                self.log.warning("RMQ channel has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.timeout)
                 self.initChannel()
     
