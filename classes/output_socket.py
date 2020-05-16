@@ -19,6 +19,7 @@ class OutputSocket():
         self.initSettings(**kwargs)
         self.socket_status = False
         self.msg_counter = 0
+        self.inside_queue = 0
     
     def initSettings(self, **kwargs):
         self.start_flag = kwargs.get("start_flag") or ""
@@ -48,7 +49,8 @@ class OutputSocket():
         self.initSocket()
         while True:
             try:
-                while queue.qsize() > 0:        
+                self.inside_queue = queue.qsize()
+                while self.inside_queue > 0:        
                     msg = queue.get()
                     self.send_socket.send(msg)
                     self.msg_counter += 1
