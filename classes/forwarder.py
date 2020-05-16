@@ -19,7 +19,7 @@ class Forwarder():
         self.output_socket.initSocket()
         while True:
             try:
-                self.inside_queue = queue.qsize()
+                self.inside_queue = self.q.qsize()
                 while self.inside_queue > 0:        
                     msg = self.q.get()
                     self.output_socket.send_socket.send(msg)
