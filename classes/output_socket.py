@@ -45,11 +45,11 @@ class OutputSocket():
         while True:
             try:
                 while queue.qsize() > 0:        
-                    msg = queue.get()    
-                    send_socket.send(msg)
+                    msg = queue.get()
+                    self.send_socket.send(msg)
                     self.msg_counter += 1
-            except:
+            except Exception as e:
                 self.socket_status = False
-                self.log.warning("Socket has lost connection. Reconnection in 30 sec..")
+                self.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.timeout)
                 self.initSocket()

@@ -81,15 +81,15 @@ class MPSiemQueue():
         events = json.loads(body.decode())
         for event in events:
             if self.filterEvent(event):
-                event_out = ' '.join([event[field] for field in set(event.keys()) & set(self.ioc_fields)])
-                self.out.put(bytes(event_out, 'utf-8'))
+                event_out = ' '.join([str(event[field]) for field in set(event.keys()) & set(self.ioc_fields)])
+                self.out.put(bytes(event_out+'\n', 'utf-8'))
     
     def messageProcessingRawEvent(self, ch, method, properties, body):   
         events = json.loads(body.decode())
         for event in events:
             if self.filterEvent(event):
                 event_out = ' '.join([value for _, value in event.items()])
-                self.out.put(bytes(event_out, 'utf-8'))
+                self.out.put(bytes(event_out+'\n', 'utf-8'))
     
     def consume(self):
         self.initChannel()
@@ -105,7 +105,7 @@ class MPSiemQueue():
     def filterEvent(self, event):
         for condition in self.filter:
             if condition['field'] in event:
-                field = condition['field']
+                field = event[condition['field']]
             else:
                 field = None
             if not condition['operator'](field, condition['value']):

@@ -15,7 +15,7 @@ class Forwarder():
     def run(self):
         self.log.info("Forwarder running..")
         self.log.info("MPSiemQueue initializing..")
-        mpsiem_queue = MPSiemQueue(host = '172.26.12.197', 
+        mpsiem_queue = MPSiemQueue(host = '10.31.120.59', 
                                 username = 'mpx_siem', 
                                 password = 'P@ssw0rd', 
                                 queue_name = 'cybertraceq',
@@ -27,7 +27,7 @@ class Forwarder():
         self.log.info("MPSiemQueue initialized")
 
         self.log.info("OutputSocket initializing..")
-        output_socket = OutputSocket(host = '172.26.12.199',
+        output_socket = OutputSocket(host = '10.31.120.59',
                                     port = 9999,
                                     timeout = 30,
                                     start_flag = 'X-KF-SendFinishedEvent')
