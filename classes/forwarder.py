@@ -1,6 +1,6 @@
 import threading
 import logging
-
+import time
 
 from classes.mpsiem_queue import MPSiemQueue
 from classes.output_socket import OutputSocket
@@ -40,3 +40,14 @@ class Forwarder():
         thread_consumer = threading.Thread(target=mpsiem_queue.consume)
         thread_consumer.start()
         
+        while True:
+            time.sleep(10)
+            self.log.info('queue size = {}, processed events in = {}, processed messages in = {}, processed events out = {}'.format(
+                str(output_socket.inside_queue),
+                str(mpsiem_queue.msg_counter),
+                str(mpsiem_queue.event_counter),
+                str(output_socket.msg_counter)
+            ))
+            mpsiem_queue.msg_counter = 0
+            mpsiem_queue.event_counter = 0
+            output_socket.msg_counter = 0
