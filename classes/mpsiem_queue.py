@@ -1,4 +1,7 @@
+import time
+import json
 import queue
+import pika
 
 class MPSiemQueue():
     def __init__(self, host, username, password, queue_name, **kwargs):
@@ -22,16 +25,16 @@ class MPSiemQueue():
         self.filter = []
         for condition in filter:
             if condition['operator'] == 'eq':
-                condition['operator'] = operator_eq
+                condition['operator'] = self.operator_eq
                 self.filter.append(condition)
             elif condition['operator'] == 'ne':
-                condition['operator'] = operator_ne
+                condition['operator'] = self.operator_ne
                 self.filter.append(condition)
             elif condition['operator'] == 'in':
-                condition['operator'] = operator_in
+                condition['operator'] = self.operator_in
                 self.filter.append(condition)
             elif condition['operator'] == 'not in':
-                condition['operator'] = operator_not_in
+                condition['operator'] = self.operator_not_in
                 self.filter.append(condition)
             else:
                 continue
@@ -66,7 +69,7 @@ class MPSiemQueue():
         channel = self.getChannel()
         while True:
             try:
-                channel.basic_consume(queue=RMQSettings['rmqQueue'], on_message_callback=self.messageProcessing, auto_ack=True)
+                channel.basic_consume(queue=self.queue_name, on_message_callback=self.messageProcessing, auto_ack=True)
                 channel.start_consuming()
             except:
                 time.sleep(self.timeout)

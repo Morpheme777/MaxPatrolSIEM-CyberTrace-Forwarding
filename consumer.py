@@ -1,10 +1,11 @@
-import pika
 import socket
 import json
-import ipaddress
 import threading, queue
 import time
 import sys
+
+from classes.mpsiem_queue import MPSiemQueue
+from classes.output_socket import OutputSocket
 #from multiprocessing import Process
 
 # Global Variables
@@ -52,16 +53,18 @@ def startConsuming(channel):
             continue
             #thread.interrupt_main()
 
-def consumer1():
+def consumer():
     # Connect to FS
     lookup_socket = FSConnect(FS_HOST, FS_PORT)
 
-    
+    output_socket = OutputSocket(host = '172.26.12.199',
+                                port = 9999,
+                                start_flag = 'X-KF-SendFinishedEvent')
     thread_send = threading.Thread(target=sendEvents,args=(q,))
     thread_send.start()
     
     
-    mpsiem_q = MPSiemQueue(host = '172.26.12.197', 
+    mpsiem_queue = MPSiemQueue(host = '172.26.12.197', 
                             username = 'mpx_siem', 
                             password = 'P@ssw0rd', 
                             queue_name = 'cybertraceq',
@@ -70,11 +73,11 @@ def consumer1():
                             timeout = 30,
                             ioc_fields = ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],
                             filter = [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}])
-    thread_consumer = threading.Thread(target=mpsiem_q.consume, args=(channel1,))
+    thread_consumer = threading.Thread(target=mpsiem_queue.consume)
     thread_consumer.start()
 
 def main():
-    consumer1()
+    consumer()
     print(' [*] Waiting for messages. To exit press CTRL+C')
      
 
