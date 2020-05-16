@@ -1,11 +1,14 @@
+import os
 import json
 import threading
 import time
 import sys
-
 import logging
+
 import cfg
 from classes.forwarder import Forwarder
+
+work_dir = os.path.dirname(os.path.realpath(__file__))
 
 def iniLogging(settings):
     loggers = ["forwarder", "mpsiem_queue", "output_socket", "monitoring"]
@@ -19,11 +22,15 @@ def iniLogging(settings):
             logger.setLevel(logging.WARNING)
         elif settings[logger_name]['level']=="ERROR":
             logger.setLevel(logging.ERROR)
-        console_handler = logging.StreamHandler()
+        mode = settings.get("mode", "console")
+        if mode == "file":
+            log_handler = logging.FileHandler('{}/{}'.format(work_dir, "forwarder.log"))
+        else:
+            log_handler = logging.StreamHandler()
         log_format = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s]: %(message)s')
-        console_handler.setFormatter(log_format)
-        logger.addHandler(console_handler)
-        logger.info('Logger "{}" initialized'.format(logger_name))
+        log_handler.setFormatter(log_format)
+        logger.addHandler(log_handler)
+        logger.debug('Logger "{}" initialized'.format(logger_name))
 
 def main():
     forwarder = Forwarder(cfg.settings)
@@ -32,6 +39,5 @@ def main():
      
 
 if __name__ == "__main__":
-    print(cfg.settings)
     iniLogging(cfg.settings['logging'])
     main()

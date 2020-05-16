@@ -17,12 +17,15 @@ settings = {
         "start_flag": 'X-KF-SendFinishedEvent'  # required
     },
     "monitoring": {
-        "timeout": 10  # optional
+        "timeout": 60  # optional
     },
 
 # Logging settings:
 # level: [DEBUG, INFO, WARNING, ERROR]
+# mode: [console, file]
     "logging": {
+        "mode": "file",  # optional, default: console
+        #"log_path": "/var/log/",  # optional, default: script directory
         "forwarder": {
             "level": "INFO"
         }, 

@@ -54,6 +54,10 @@ class Forwarder():
             self.output_socket.msg_counter = 0
 
     def run(self):
+        self.log.info("""
+ ####################################
+ # ~~~ MaxPatrol SIEM Forwarder ~~~ #
+ ####################################""")
         self.log.info("Forwarder running..")
         self.log.info("MPSiemQueue initializing..")
         self.mpsiem_queue = MPSiemQueue(self.settings["consumer"])
