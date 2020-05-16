@@ -3,37 +3,27 @@ import threading
 import time
 import sys
 
-from classes.mpsiem_queue import MPSiemQueue
-from classes.output_socket import OutputSocket
+import logging
 
+from classes.forwarder import Forwarder
 
-def forward():
-    
-    mpsiem_queue = MPSiemQueue(host = '172.26.12.197', 
-                            username = 'mpx_siem', 
-                            password = 'P@ssw0rd', 
-                            queue_name = 'cybertraceq',
-                            port = 5672,
-                            rmq_vhost = '/',
-                            timeout = 30,
-                            ioc_fields = ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],
-                            filter = [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}])
-    
-    output_socket = OutputSocket(host = '172.26.12.199',
-                                port = 9999,
-                                timeout = 30,
-                                start_flag = 'X-KF-SendFinishedEvent')
-    '''
-    thread_send = threading.Thread(target=output_socket.send,args=(mpsiem_queue.out))
-    thread_send.start()
-    
-    thread_consumer = threading.Thread(target=mpsiem_queue.consume)
-    thread_consumer.start()
-    '''
+def iniLogging():
+    loggers = ["forwarder", "mpsiem_queue", "output_socket", "monitoring"]
+    for logger_name in loggers:
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.DEBUG)
+        console_handler = logging.StreamHandler()
+        log_format = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s]: %(message)s')
+        console_handler.setFormatter(log_format)
+        logger.addHandler(console_handler)
+        logger.info('Logger "{}" initialized'.format(logger_name))
+
 def main():
-    forward()
+    forwarder = Forwarder("settings")
+    forwarder.run()
     print(' [*] Waiting for messages. To exit press CTRL+C')
      
 
 if __name__ == "__main__":
+    iniLogging()
     main()

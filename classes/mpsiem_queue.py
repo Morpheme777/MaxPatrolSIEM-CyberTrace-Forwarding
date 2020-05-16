@@ -2,15 +2,28 @@ import time
 import json
 import queue
 import pika
+import logging
 
 class MPSiemQueue():
     def __init__(self, host, username, password, queue_name, **kwargs):
+        self.log = logging.getLogger("mpsiem_queue")
+        self.log.info(
+            'Settings: host={}, username={}, password=***, queue_name={}'.format(
+                host,
+                username,
+                queue_name))
+        self.log.info('Additional settings: {}'.format(', '.join(
+            ['{}={}'.format(k, v) for k, v in kwargs.items()]
+        )))
         self.host = host
         self.username = username
         self.password = password
         self.queue_name = queue_name
         self.out = queue.Queue()
         self.initSettings(**kwargs)
+        self.chanel_status = False
+        self.msg_counter = 0
+        self.event_counter = 0
         
     def initSettings(self, **kwargs):
         self.rmq_vhost = kwargs.get("rmq_vhost") or "/"
@@ -37,19 +50,32 @@ class MPSiemQueue():
                 condition['operator'] = self.operator_not_in
                 self.filter.append(condition)
             else:
+                log.warning('Condition {} is not valid: operator "{}" is not valid'.format(
+                    str(condition),
+                    condition['operator']
+                ))
                 continue
                 
-    def getChannel(self):
-        credentials = pika.PlainCredentials(self.username, self.password)
-        connection_parameters = pika.ConnectionParameters(self.host, 
-                                                        self.port, 
-                                                        self.rmq_vhost, 
-                                                        credentials)
-        connection = pika.BlockingConnection(connection_parameters)
-        channel = connection.channel()
-        channel.basic_qos(prefetch_count=1)
-        channel.queue_declare(self.queue_name, durable=True)
-        return channel
+    def initChannel(self):
+        while not self.chanel_status:
+            self.log.info("Trying to connect..")
+            try:
+                self.log.info("RMQ channel initializing..")
+                credentials = pika.PlainCredentials(self.username, self.password)
+                connection_parameters = pika.ConnectionParameters(self.host, 
+                                                                self.port, 
+                                                                self.rmq_vhost, 
+                                                                credentials)
+                connection = pika.BlockingConnection(connection_parameters)
+                self.channel = connection.channel()
+                self.channel.basic_qos(prefetch_count=1)
+                self.channel.queue_declare(self.queue_name, durable=True)
+                self.log.info("RMQ channel initialized")
+                self.chanel_status = True
+            except Exception as e:
+                self.log.error("RMQ channel initializing is failed: {}. Reconnection in 30 sec..".format(str(e)))
+                time.sleep(self.timeout)
+                self.chanel_status = False
     
     def messageProcessingByField(self, ch, method, properties, body):   
         events = json.loads(body.decode())
@@ -66,14 +92,15 @@ class MPSiemQueue():
                 self.out(bytes(event_out, 'utf-8'))
     
     def consume(self):
-        channel = self.getChannel()
+        self.initChannel()
         while True:
             try:
-                channel.basic_consume(queue=self.queue_name, on_message_callback=self.messageProcessing, auto_ack=True)
-                channel.start_consuming()
+                self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.messageProcessing, auto_ack=True)
+                self.channel.start_consuming()
             except:
+                self.log.warning("RMQ channel has lost connection. Reconnection in 30 sec..")
                 time.sleep(self.timeout)
-                channel = self.getChannel()
+                self.initChannel()
     
     def filterEvent(self, event):
         for condition in self.filter:
