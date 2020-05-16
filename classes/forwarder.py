@@ -1,6 +1,7 @@
 import threading
 import logging
 import time
+import queue
 
 from classes.mpsiem_queue import MPSiemQueue
 from classes.output_socket import OutputSocket
