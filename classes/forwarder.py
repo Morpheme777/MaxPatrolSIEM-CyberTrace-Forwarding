@@ -16,23 +16,23 @@ class Forwarder():
         self.inside_queue = 0
 
     def processQueue(self):
-        output_socket.initSocket()
+        self.output_socket.initSocket()
         while True:
             try:
                 self.inside_queue = queue.qsize()
                 while self.inside_queue > 0:        
                     msg = self.q.get()
-                    output_socket.send_socket.send(msg)
-                    output_socket.msg_counter += 1
+                    self.output_socket.send_socket.send(msg)
+                    self.output_socket.msg_counter += 1
             except Exception as e:
                 try:
-                    output_socket.send_socket.close()
+                    self.output_socket.send_socket.close()
                 except:
                     pass
-                output_socket.socket_status = False
-                output_socket.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
-                time.sleep(output_socket.timeout)
-                output_socket.initSocket()
+                self.output_socket.socket_status = False
+                self.output_socket.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
+                time.sleep(self.output_socket.timeout)
+                self.output_socket.initSocket()
 
     def run(self):
         self.log.info("Forwarder running..")
