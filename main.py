@@ -23,13 +23,13 @@ def forward():
                                 port = 9999,
                                 timeout = 30,
                                 start_flag = 'X-KF-SendFinishedEvent')
-
+    '''
     thread_send = threading.Thread(target=output_socket.send,args=(mpsiem_queue.out))
     thread_send.start()
     
     thread_consumer = threading.Thread(target=mpsiem_queue.consume)
     thread_consumer.start()
-
+    '''
 def main():
     forward()
     print(' [*] Waiting for messages. To exit press CTRL+C')

@@ -4,7 +4,7 @@ import time
 
 class OutputSocket():
 
-    def __init__(self, host, port **kwargs):
+    def __init__(self, host, port, **kwargs):
         self.host = host
         self.port = port
         self.initSettings(**kwargs)
