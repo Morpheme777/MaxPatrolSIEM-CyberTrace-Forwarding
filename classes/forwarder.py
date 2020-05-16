@@ -11,10 +11,11 @@ class Forwarder():
 
     def __init__(self, settings):
         self.log = logging.getLogger("forwarder")
+        self.log_mon = logging.getLogger("monitoring")
         self.settings = settings
         self.q = queue.Queue()
         self.inside_queue = 0
-        self.monitoring_timeout = 10
+        self.monitoring_timeout = self.settings["monitoring"].get("timeout", 10)
 
     def processQueue(self):
         self.output_socket.initSocket()
@@ -38,7 +39,7 @@ class Forwarder():
     def monitoring(self):
         while True:
             time.sleep(self.monitoring_timeout)
-            self.log.info('Consumer:{}, Sender:{}, queue cache = {}, in: [{} msg, {} evts, {} eps], out: [{} evts, {} eps]'.format(
+            self.log_mon.info('Consumer:{}, Sender:{}, Queue cache:{}, Input: [{} msg, {} evts, {} eps], Output: [{} evts, {} eps]'.format(
                 str(self.mpsiem_queue.chanel_status),
                 str(self.output_socket.socket_status),
                 str(self.output_socket.inside_queue),
@@ -55,23 +56,12 @@ class Forwarder():
     def run(self):
         self.log.info("Forwarder running..")
         self.log.info("MPSiemQueue initializing..")
-        self.mpsiem_queue = MPSiemQueue(host = '10.31.120.59', 
-                                username = 'mpx_siem', 
-                                password = 'P@ssw0rd', 
-                                queue_name = 'cybertraceq',
-                                port = 5672,
-                                rmq_vhost = '/',
-                                timeout = 30,
-                                ioc_fields = ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],
-                                filter = [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}])
+        self.mpsiem_queue = MPSiemQueue(self.settings["consumer"])
         self.mpsiem_queue.out = self.q
         self.log.info("MPSiemQueue initialized")
 
         self.log.info("OutputSocket initializing..")
-        self.output_socket = OutputSocket(host = '10.31.120.59',
-                                    port = 9999,
-                                    timeout = 30,
-                                    start_flag = 'X-KF-SendFinishedEvent')
+        self.output_socket = OutputSocket(self.settings["sender"])
         self.log.info("OutputSocket initialized")
 
         

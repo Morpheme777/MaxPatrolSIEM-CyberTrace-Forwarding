@@ -5,25 +5,25 @@ import logging
 
 class OutputSocket():
 
-    def __init__(self, host, port, **kwargs):
+    def __init__(self, settings):
         self.log = logging.getLogger("output_socket")
         self.log.info(
             'Settings: host={}, port={}'.format(
-                host,
-                port))
+                settings.get("host"),
+                settings.get("port")))
         self.log.info('Additional settings: {}'.format(', '.join(
-            ['{}={}'.format(k, v) for k, v in kwargs.items()]
+            ['{}={}'.format(k, v) for k, v in settings.items()]
         )))
-        self.host = host
-        self.port = port
-        self.initSettings(**kwargs)
+        self.host = settings.get("host")
+        self.port = settings.get("port")
+        self.initSettings(settings)
         self.socket_status = False
         self.msg_counter = 0
         self.inside_queue = 0
     
-    def initSettings(self, **kwargs):
-        self.start_flag = kwargs.get("start_flag") or ""
-        self.timeout = kwargs.get("timeout") or 30
+    def initSettings(self, settings):
+        self.start_flag = settings.get("start_flag", "")
+        self.timeout = settings.get("timeout", 30)
     
     def initSocket(self):
         while not self.socket_status:

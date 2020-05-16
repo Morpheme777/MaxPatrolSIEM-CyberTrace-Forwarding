@@ -5,36 +5,36 @@ import pika
 import logging
 
 class MPSiemQueue():
-    def __init__(self, host, username, password, queue_name, **kwargs):
+    def __init__(self, settings):
         self.log = logging.getLogger("mpsiem_queue")
         self.log.info(
             'Settings: host={}, username={}, password=***, queue_name={}'.format(
-                host,
-                username,
-                queue_name))
+                settings.get("host"),
+                settings.get("username"),
+                settings.get("queue_name")))
         self.log.info('Additional settings: {}'.format(', '.join(
-            ['{}={}'.format(k, v) for k, v in kwargs.items()]
+            ['{}={}'.format(k, v) for k, v in settings.items()]
         )))
-        self.host = host
-        self.username = username
-        self.password = password
-        self.queue_name = queue_name
+        self.host = settings.get("host")
+        self.username = settings.get("username")
+        self.password = settings.get("password")
+        self.queue_name = settings.get("queue_name")
         self.out = queue.Queue()
-        self.initSettings(**kwargs)
+        self.initSettings(settings)
         self.chanel_status = False
         self.msg_counter = 0
         self.event_counter = 0
         
-    def initSettings(self, **kwargs):
-        self.rmq_vhost = kwargs.get("rmq_vhost") or "/"
-        self.port = kwargs.get("port") or 5672
-        self.timeout = kwargs.get("timeout") or 30
-        self.ioc_fields = kwargs.get("ioc_fields")
+    def initSettings(self, settings):
+        self.rmq_vhost = settings.get("rmq_vhost", "/")
+        self.port = settings.get("port", 5672)
+        self.timeout = settings.get("timeout", 30)
+        self.ioc_fields = settings.get("ioc_fields")
         if self.ioc_fields:
             self.messageProcessing = self.messageProcessingByField
         else:
             self.messageProcessing = self.messageProcessingRawEvent
-        filter = kwargs.get("filter") or []
+        filter = settings.get("filter", [])
         self.filter = []
         for condition in filter:
             if condition['operator'] == 'eq':
