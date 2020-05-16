@@ -63,3 +63,8 @@ class OutputSocket():
                 self.log.warning("Socket has lost connection: {}. Reconnection in 30 sec..".format(str(e)))
                 time.sleep(self.timeout)
                 self.initSocket()
+
+    def send1(self, msg):
+        self.send_socket.send(msg)
+        self.msg_counter += 1
+            
