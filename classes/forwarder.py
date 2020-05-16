@@ -57,7 +57,7 @@ class Forwarder():
         self.log.info("OutputSocket initialized")
 
         
-        thread_send = threading.Thread(target=self.processQueue, args=(self.q,))
+        thread_send = threading.Thread(target=self.processQueue)
         thread_send.start()
         
         thread_consumer = threading.Thread(target=self.mpsiem_queue.consume)
