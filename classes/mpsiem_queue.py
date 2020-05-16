@@ -79,7 +79,9 @@ class MPSiemQueue():
     
     def messageProcessingByField(self, ch, method, properties, body):   
         events = json.loads(body.decode())
+        self.msg_counter += 1
         for event in events:
+            self.event_counter += 1
             if self.filterEvent(event):
                 event_out = ' '.join(['{}={}'.format(field, str(event[field])) for field in set(event.keys()) & set(self.ioc_fields)])
                 self.out.put(bytes(event_out+'\n', 'utf-8'))
