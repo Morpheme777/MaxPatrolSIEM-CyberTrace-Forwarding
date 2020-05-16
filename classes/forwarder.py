@@ -11,6 +11,7 @@ class Forwarder():
     def __init__(self, settings):
         self.log = logging.getLogger("forwarder")
         self.settings = settings
+        self.q = queue.Queue()
 
     def run(self):
         self.log.info("Forwarder running..")
@@ -24,6 +25,7 @@ class Forwarder():
                                 timeout = 30,
                                 ioc_fields = ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],
                                 filter = [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}])
+        mpsiem_queue.out = self.q
         self.log.info("MPSiemQueue initialized")
 
         self.log.info("OutputSocket initializing..")
@@ -34,7 +36,7 @@ class Forwarder():
         self.log.info("OutputSocket initialized")
 
         
-        thread_send = threading.Thread(target=output_socket.send,args=(mpsiem_queue.out,))
+        thread_send = threading.Thread(target=output_socket.send,args=(self.q,))
         thread_send.start()
         
         thread_consumer = threading.Thread(target=mpsiem_queue.consume)
