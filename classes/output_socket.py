@@ -45,7 +45,7 @@ class OutputSocket():
                 time.sleep(self.timeout)
                 self.socket_status = False
 
-    def send(self, queue):
+    def send1(self, queue):
         self.initSocket()
         while True:
             try:
@@ -64,7 +64,7 @@ class OutputSocket():
                 time.sleep(self.timeout)
                 self.initSocket()
 
-    def send1(self, msg):
+    def send(self, msg):
         self.send_socket.send(msg)
         self.msg_counter += 1
             
