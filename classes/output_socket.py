@@ -66,5 +66,4 @@ class OutputSocket():
 
     def send(self, msg):
         self.send_socket.send(msg)
-        self.msg_counter += 1
             
