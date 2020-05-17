@@ -34,6 +34,7 @@ class MPSiemQueue():
             self.messageProcessing = self.messageProcessingByField
         else:
             self.messageProcessing = self.messageProcessingRawEvent
+        self.field_mapping = settings.get("field_mapping", {})
         filter = settings.get("filter", [])
         self.filter = []
         for condition in filter:
@@ -83,7 +84,7 @@ class MPSiemQueue():
         for event in events:
             self.event_counter += 1
             if self.filterEvent(event):
-                event_out = ' '.join(['{}={}'.format(field, str(event[field])) for field in set(event.keys()) & set(self.ioc_fields)])
+                event_out = ' '.join(['{}={}'.format(self.field_mapping.get(field, field), str(event[field])) for field in set(event.keys()) & set(self.ioc_fields)])
                 self.out.put(bytes(event_out+'\n', 'utf-8'))
     
     def messageProcessingRawEvent(self, ch, method, properties, body):   
@@ -108,10 +109,11 @@ class MPSiemQueue():
     
     def filterEvent(self, event):
         for condition in self.filter:
-            if condition['field'] in event:
-                field = event[condition['field']]
-            else:
-                field = None
+            field = event.get(condition['field'], None)
+            #if condition['field'] in event:
+            #    field = event[condition['field']]
+            #else:
+            #    field = None
             if not condition['operator'](field, condition['value']):
                 return False
         return True
