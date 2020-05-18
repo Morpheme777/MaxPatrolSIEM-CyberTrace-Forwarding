@@ -9,7 +9,7 @@ settings = {
         "rmq_vhost": '/',  # optional
         "timeout": 30,  # optional
         "ioc_fields": ['src.ip','dst.ip','src.host','dst.host','dst.port','object.path','object.hash','datafield1','recv_ipv4','event_src.host','event_src.title'],  # optional
-        "filter": [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}]  # optional
+        "filter": [{'field': 'event_src.title', 'operator': 'ne', 'value': 'cybertrace'}],  # optional
         "field_mapping": {
             "src.host": "src_host",
             "event_src.title": "event_src_title"

@@ -119,9 +119,9 @@ class MPSiemQueue():
         return True
     
     def operator_eq(self, field, value):
-        if field == value:
-            return True
-        return False
+        if field != value:
+            return False
+        return True
         
     def operator_ne(self, field, value):
         if field != value:
